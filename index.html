@@ -149,6 +149,37 @@
 
   @media(max-width:680px){ .main{grid-template-columns:1fr} .sidebar{border-right:none;border-bottom:1px solid var(--border)} .content{padding:20px 16px} .header{padding:20px 16px} .progress-section{padding:12px 16px} }
 
+  /* ── SAVE & LEAVE BUTTON ── */
+  .save-leave-btn {
+    position: fixed; bottom: 24px; right: 24px; z-index: 500;
+    background: var(--ink); color: var(--paper);
+    border: none; border-radius: 50px;
+    padding: 12px 22px;
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    letter-spacing: 0.08em; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    transition: all 0.2s; display: none;
+  }
+  .save-leave-btn:hover { background: #333; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+
+  /* ── LEAVE CHECK MODAL ── */
+  .leave-modal-overlay { position:fixed;inset:0;background:rgba(28,25,23,0.75);display:flex;align-items:center;justify-content:center;z-index:900;backdrop-filter:blur(3px); }
+  .leave-modal-overlay.hidden { display:none; }
+  .leave-modal-card { background:var(--paper);border-radius:14px;padding:32px 36px;max-width:440px;width:90%; }
+  .leave-modal-icon { font-size:2rem;margin-bottom:10px;text-align:center; }
+  .leave-modal-title { font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;margin-bottom:8px;text-align:center; }
+  .leave-modal-body { font-size:0.83rem;line-height:1.7;margin-bottom:20px; }
+  .leave-missing-list { list-style:none;margin:12px 0;display:flex;flex-direction:column;gap:6px; }
+  .leave-missing-item { display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff8f0;border:1px solid #f5d9a8;border-radius:8px;font-size:0.82rem;cursor:pointer;transition:background 0.15s; }
+  .leave-missing-item:hover { background:#ffecd0; }
+  .leave-missing-item::before { content:"📅";font-size:0.9rem; }
+  .leave-ok-msg { text-align:center;padding:16px;background:#f0faf5;border:1px solid #b0dcc5;border-radius:10px;font-size:0.88rem;color:var(--teal);line-height:1.7; }
+  .leave-btn-row { display:flex;gap:10px;margin-top:20px; }
+  .leave-btn { flex:1;padding:10px;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:0.75rem;cursor:pointer;letter-spacing:0.06em;transition:opacity 0.15s; }
+  .leave-btn-close { background:var(--teal);color:#fff; }
+  .leave-btn-cancel { background:var(--paper2);color:var(--muted);border:1px solid var(--border); }
+  .leave-btn:hover { opacity:0.85; }
+
   /* ── DEADLINE MODAL ── */
   .modal-overlay { position:fixed;inset:0;background:rgba(28,25,23,0.75);display:flex;align-items:center;justify-content:center;z-index:888;backdrop-filter:blur(3px); }
   .modal-overlay.hidden { display:none; }
@@ -285,6 +316,21 @@
       <div class="quote-text" id="quote-text">"How will you measure your life?"</div>
       <div class="quote-author" id="quote-author">— Clayton Christensen</div>
     </div>
+  </div>
+</div>
+
+<!-- ② Save & Leave Button -->
+<button class="save-leave-btn" id="save-leave-btn" onclick="checkAndLeave()">
+  ✓ 儲存並離開
+</button>
+
+<!-- ④ Leave Check Modal -->
+<div class="leave-modal-overlay hidden" id="leave-modal">
+  <div class="leave-modal-card">
+    <div class="leave-modal-icon" id="leave-modal-icon">📋</div>
+    <div class="leave-modal-title" id="leave-modal-title">離開前確認</div>
+    <div class="leave-modal-body" id="leave-modal-body"></div>
+    <div class="leave-btn-row" id="leave-btn-row"></div>
   </div>
 </div>
 
@@ -854,6 +900,68 @@ function confirmName() {
       if (syncMsg) syncMsg.textContent = `👋 歡迎回來，繼續「${chName}」`;
     }, 300);
   }
+}
+// ── 儲存並離開 ───────────────────────────────────────────────
+function checkAndLeave() {
+  const missing = state.chapters.filter(ch => !ch.deadline);
+  const modal = document.getElementById('leave-modal');
+  const icon = document.getElementById('leave-modal-icon');
+  const title = document.getElementById('leave-modal-title');
+  const body = document.getElementById('leave-modal-body');
+  const btnRow = document.getElementById('leave-btn-row');
+
+  if (missing.length > 0) {
+    // Has missing deadlines
+    icon.textContent = '⚠️';
+    title.textContent = '還有章節未設定目標完成日';
+    body.innerHTML = `
+      <div style="color:var(--muted);margin-bottom:8px;">以下章節尚未設定，點擊可直接跳過去填寫：</div>
+      <ul class="leave-missing-list">
+        ${missing.map(ch => `
+          <li class="leave-missing-item" onclick="goToChapterFromLeave(${ch.id})">
+            Ch.${ch.id}　${ch.name}
+          </li>`).join('')}
+      </ul>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:8px;">填完所有章節的目標完成日後，再點「儲存並離開」即可。</div>`;
+    btnRow.innerHTML = `
+      <button class="leave-btn leave-btn-cancel" onclick="closeLeaveModal()">回去填寫</button>`;
+  } else {
+    // All deadlines filled
+    icon.textContent = '🎉';
+    title.textContent = '可以放心離開了！';
+    body.innerHTML = `
+      <div class="leave-ok-msg">
+        所有章節的目標完成日都已設定完成 ✅<br>
+        進度已自動儲存，下次回來會從上次停留的章節繼續。<br><br>
+        <strong>一起出發、一起畢業！🎓</strong>
+      </div>`;
+    btnRow.innerHTML = `
+      <button class="leave-btn leave-btn-cancel" onclick="closeLeaveModal()">繼續填寫</button>
+      <button class="leave-btn leave-btn-close" onclick="closeLeaveModal()">知道了，關掉頁面</button>`;
+  }
+  modal.classList.remove('hidden');
+}
+
+function goToChapterFromLeave(id) {
+  closeLeaveModal();
+  _doSetActiveChapter(id);
+  // Scroll to deadline block
+  setTimeout(() => {
+    const dl = document.getElementById('chapter-deadline');
+    if (dl) dl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 300);
+}
+
+function closeLeaveModal() {
+  document.getElementById('leave-modal').classList.add('hidden');
+}
+
+// Show save-leave button after login
+const _origRenderAll = renderAll;
+function renderAll() {
+  _origRenderAll();
+  const btn = document.getElementById('save-leave-btn');
+  if (btn && studentName) btn.style.display = 'block';
 }
 </script>
 </body>
