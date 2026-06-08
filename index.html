@@ -306,7 +306,7 @@
       <div class="deadline-icon">📅</div>
       <div class="deadline-info">
         <label>本章節目標完成日</label>
-        <input type="date" class="deadline-date-input" id="chapter-deadline" min="2026-01-01" max="2028-12-31" onchange="updateDeadline(this.value)">
+        <input type="date" class="deadline-date-input" id="chapter-deadline" min="2026-01-01" max="2028-12-31" onchange="updateDeadline(this.value)" oninput="updateDeadline(this.value)">
         <div id="deadline-reminder" style="display:none;margin-top:5px;font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--red);animation:blink 1.5s ease-in-out infinite;">
           ⚠️ 尚未設定目標完成日，請在離開前填寫！
         </div>
@@ -516,6 +516,7 @@ function toggleTask(taskId){ const ch=getChapter(activeId); const t=ch.tasks.fin
 function deleteTask(taskId){ if(!confirm('確定刪除這個任務？')) return; const ch=getChapter(activeId); ch.tasks=ch.tasks.filter(t=>t.id!==taskId); save(); renderContent(); renderStats(); renderSidebar(); }
 function addTask(){ const input=document.getElementById('new-task-input'); const text=input.value.trim(); if(!text)return; const ch=getChapter(activeId); ch.tasks.push({id:Date.now(),text,done:false,tag:''}); input.value=''; save(); renderContent(); renderStats(); renderSidebar(); }
 function updateChapterStatus(val){ getChapter(activeId).status=val; save(); renderSidebar(); renderStats(); }
+let _deadlineDebounce = null;
 function updateDeadline(val){
   if (val) {
     const year = new Date(val).getFullYear();
@@ -525,8 +526,14 @@ function updateDeadline(val){
       return;
     }
   }
-  getChapter(activeId).deadline=val; save(); updateDaysLeft(val);
-  updateSaveLeaveBtn(); renderSidebar(); // update ⚠️ icons too
+  getChapter(activeId).deadline = val;
+  save();
+  updateDaysLeft(val);
+  clearTimeout(_deadlineDebounce);
+  _deadlineDebounce = setTimeout(() => {
+    updateSaveLeaveBtn();
+    renderSidebar();
+  }, 100);
 }
 function updateDaysLeft(dateStr){
   const el=document.getElementById('days-left-display');
@@ -833,6 +840,7 @@ function confirmModalDeadline() {
   }
   document.getElementById('deadline-modal').classList.add('hidden');
   pendingDeadlineChapterId = null;
+  updateSaveLeaveBtn(); renderSidebar(); // update ⚠️ and hide button if all filled
   // Navigate to intended chapter if any
   if (_pendingNavTarget !== null) {
     const target = _pendingNavTarget;
