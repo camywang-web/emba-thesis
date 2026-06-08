@@ -129,6 +129,9 @@
   .task-text { font-size: 0.84rem; line-height: 1.5; flex: 1; }
   .task-tag { font-family: 'DM Mono', monospace; font-size: 0.62rem; padding: 2px 7px; border-radius: 20px; background: var(--paper2); color: var(--muted); flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
   .task-tag.urgent { background: #fde8e8; color: var(--red); }
+  .task-del { opacity:0; font-size:0.7rem; color:#ccc; cursor:pointer; flex-shrink:0; padding:2px 4px; border-radius:4px; transition:all 0.15s; align-self:flex-start; margin-top:1px; }
+  .task-del:hover { color:var(--red); background:#fde8e8; }
+  .task-item:hover .task-del { opacity:1; }
   .add-task-row { display: flex; gap: 8px; margin-top: 12px; }
   .add-task-input { flex: 1; padding: 8px 12px; border: 1px dashed var(--border); border-radius: 8px; font-family: 'Noto Serif TC', serif; font-size: 0.82rem; background: transparent; color: var(--ink); outline: none; }
   .add-task-input:focus { border-color: var(--teal); border-style: solid; }
@@ -428,6 +431,7 @@ function renderContent() {
       <div class="task-check"><span class="task-check-icon">✓</span></div>
       <div class="task-text">${t.text}</div>
       ${t.tag==='urgent'?'<div class="task-tag urgent">⚡ 急</div>':''}
+      <span class="task-del" onclick="event.stopPropagation();deleteTask(${t.id})" title="刪除此任務">✕</span>
     </li>`).join('');
   document.getElementById('chapter-deadline').value = ch.deadline || '';
   updateDaysLeft(ch.deadline);
@@ -452,6 +456,7 @@ function renderStats() {
 
 function setActiveChapter(id){ activeId=id; renderSidebar(); renderContent(); }
 function toggleTask(taskId){ const ch=getChapter(activeId); const t=ch.tasks.find(t=>t.id===taskId); if(t)t.done=!t.done; save(); renderContent(); renderStats(); renderSidebar(); }
+function deleteTask(taskId){ if(!confirm('確定刪除這個任務？')) return; const ch=getChapter(activeId); ch.tasks=ch.tasks.filter(t=>t.id!==taskId); save(); renderContent(); renderStats(); renderSidebar(); }
 function addTask(){ const input=document.getElementById('new-task-input'); const text=input.value.trim(); if(!text)return; const ch=getChapter(activeId); ch.tasks.push({id:Date.now(),text,done:false,tag:''}); input.value=''; save(); renderContent(); renderStats(); renderSidebar(); }
 function updateChapterStatus(val){ getChapter(activeId).status=val; save(); renderSidebar(); renderStats(); }
 function updateDeadline(val){ getChapter(activeId).deadline=val; save(); updateDaysLeft(val); }
