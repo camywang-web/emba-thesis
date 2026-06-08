@@ -452,7 +452,11 @@ function setSyncStatus(type, msg) {
 function save() { localStorage.setItem('emba_' + studentName, JSON.stringify(state)); schedulSync(); }
 function getChapter(id) { return state.chapters.find(c => c.id === id); }
 
-function renderAll() { renderSidebar(); renderContent(); renderStats(); renderAdvisorNotes(); }
+function renderAll() {
+  renderSidebar(); renderContent(); renderStats(); renderAdvisorNotes();
+  const btn = document.getElementById('save-leave-btn');
+  if (btn && studentName) btn.style.display = 'block';
+}
 
 function renderSidebar() {
   document.getElementById('chapter-list').innerHTML = state.chapters.map(ch => {
@@ -956,10 +960,8 @@ function closeLeaveModal() {
   document.getElementById('leave-modal').classList.add('hidden');
 }
 
-// Show save-leave button after login
-const _origRenderAll = renderAll;
-function renderAll() {
-  _origRenderAll();
+// Show save-leave button - called after login
+function showSaveLeaveBtn() {
   const btn = document.getElementById('save-leave-btn');
   if (btn && studentName) btn.style.display = 'block';
 }
