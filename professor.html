@@ -28,7 +28,7 @@
   /* SUMMARY BAR */
   .summary-bar{background:var(--paper2);border-bottom:1px solid var(--border);padding:16px 36px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;}
   .summary-item{text-align:center;}
-  .summary-num{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;color:var(--teal);line-height:1;}
+  .summary-num{font-family:'DM Mono',monospace;font-size:1.8rem;font-weight:500;color:var(--teal);line-height:1;}
   .summary-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);letter-spacing:0.1em;margin-top:3px;}
   .summary-divider{width:1px;height:40px;background:var(--border);}
   .last-updated{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);margin-left:auto;}
@@ -216,8 +216,9 @@ function renderStudentCard(s) {
       </div>`
     ).join('') : '';
 
-    const deadlineDisplay = ch.deadline
-      ? `<span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#2a6b6e;background:#d0e8e9;padding:1px 7px;border-radius:20px;">📅 ${ch.deadline}</span>`
+    const cleanDeadline = ch.deadline ? ch.deadline.split('T')[0] : '';
+    const deadlineDisplay = cleanDeadline
+      ? `<span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#2a6b6e;background:#d0e8e9;padding:1px 7px;border-radius:20px;">📅 ${cleanDeadline}</span>`
       : `<span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#8b2e2e;background:#fee2e2;padding:1px 7px;border-radius:20px;">⚠️ 尚未填寫</span>`;
 
     return `<div class="chapter-row">
