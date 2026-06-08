@@ -274,7 +274,7 @@
       <div class="deadline-icon">📅</div>
       <div class="deadline-info">
         <label>本章節目標完成日</label>
-        <input type="date" class="deadline-date-input" id="chapter-deadline" onchange="updateDeadline(this.value)">
+        <input type="date" class="deadline-date-input" id="chapter-deadline" min="2026-01-01" max="2028-12-31" onchange="updateDeadline(this.value)">
         <div id="deadline-reminder" style="display:none;margin-top:5px;font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--red);animation:blink 1.5s ease-in-out infinite;">
           ⚠️ 尚未設定目標完成日，請在離開前填寫！
         </div>
@@ -294,7 +294,7 @@
     <div class="modal-icon">📅</div>
     <div class="modal-title" id="modal-ch-title">請設定目標完成日</div>
     <div class="modal-sub" id="modal-ch-sub">每章設定目標，讓自己的論文之路更有節奏感！<br>（之後可隨時修改）</div>
-    <input type="date" class="modal-date-input" id="modal-date-input">
+    <input type="date" class="modal-date-input" id="modal-date-input" min="2026-01-01" max="2028-12-31">
     <button class="modal-btn" onclick="confirmModalDeadline()">✓ 確認設定</button>
   </div>
 </div>
@@ -459,7 +459,17 @@ function toggleTask(taskId){ const ch=getChapter(activeId); const t=ch.tasks.fin
 function deleteTask(taskId){ if(!confirm('確定刪除這個任務？')) return; const ch=getChapter(activeId); ch.tasks=ch.tasks.filter(t=>t.id!==taskId); save(); renderContent(); renderStats(); renderSidebar(); }
 function addTask(){ const input=document.getElementById('new-task-input'); const text=input.value.trim(); if(!text)return; const ch=getChapter(activeId); ch.tasks.push({id:Date.now(),text,done:false,tag:''}); input.value=''; save(); renderContent(); renderStats(); renderSidebar(); }
 function updateChapterStatus(val){ getChapter(activeId).status=val; save(); renderSidebar(); renderStats(); }
-function updateDeadline(val){ getChapter(activeId).deadline=val; save(); updateDaysLeft(val); }
+function updateDeadline(val){
+  if (val) {
+    const year = new Date(val).getFullYear();
+    if (year < 2026 || year > 2028) {
+      alert('請輸入合理的年份（2026–2028）');
+      document.getElementById('chapter-deadline').value = getChapter(activeId).deadline || '';
+      return;
+    }
+  }
+  getChapter(activeId).deadline=val; save(); updateDaysLeft(val);
+}
 function updateDaysLeft(dateStr){
   const el=document.getElementById('days-left-display');
   const reminder=document.getElementById('deadline-reminder');
@@ -753,6 +763,8 @@ let _pendingNavTarget = null;
 function confirmModalDeadline() {
   const val = document.getElementById('modal-date-input').value;
   if (!val) { alert('請選擇目標完成日，才能繼續喔！'); return; }
+  const year = new Date(val).getFullYear();
+  if (year < 2026 || year > 2028) { alert('請輸入合理的年份（2026–2028）'); return; }
   if (pendingDeadlineChapterId) {
     getChapter(pendingDeadlineChapterId).deadline = val;
     save();
