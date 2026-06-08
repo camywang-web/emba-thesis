@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EMBA 論文進度管理 — 同學版</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=DM+Mono:wght@400;500&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
@@ -454,8 +455,14 @@ function getChapter(id) { return state.chapters.find(c => c.id === id); }
 
 function renderAll() {
   renderSidebar(); renderContent(); renderStats(); renderAdvisorNotes();
+  updateSaveLeaveBtn();
+}
+
+function updateSaveLeaveBtn() {
   const btn = document.getElementById('save-leave-btn');
-  if (btn && studentName) btn.style.display = 'block';
+  if (!btn || !studentName) return;
+  const missing = state.chapters.filter(ch => !ch.deadline);
+  btn.style.display = missing.length > 0 ? 'block' : 'none';
 }
 
 function renderSidebar() {
@@ -519,6 +526,7 @@ function updateDeadline(val){
     }
   }
   getChapter(activeId).deadline=val; save(); updateDaysLeft(val);
+  updateSaveLeaveBtn(); renderSidebar(); // update ⚠️ icons too
 }
 function updateDaysLeft(dateStr){
   const el=document.getElementById('days-left-display');
@@ -941,7 +949,7 @@ function checkAndLeave() {
       </div>`;
     btnRow.innerHTML = `
       <button class="leave-btn leave-btn-cancel" onclick="closeLeaveModal()">繼續填寫</button>
-      <button class="leave-btn leave-btn-close" onclick="closeLeaveModal()">知道了，關掉頁面</button>`;
+      <button class="leave-btn leave-btn-close" onclick="closeLeaveModal()">✅ 已儲存，請手動關閉此頁面</button>`;
   }
   modal.classList.remove('hidden');
 }
